@@ -3,6 +3,11 @@
 library(ggplot2); 
 library(gridExtra); 
 
+print0 <- function(df=dataset) {
+#  library(gridExtra); library(ggplot2);
+  print(ggplot(df));
+  grid.table(head(df, 7))
+} 
 
 fmt_c1 <- function(x, div=1) { format(round(x/div, 1), nsmall=1, big.mark=","); }
 
