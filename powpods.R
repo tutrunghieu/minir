@@ -6,6 +6,27 @@ library(ggplot2);
 library(gridExtra);
 
 #-------------------------------------------
+add_topping_table <- function(g, df=dataset, top=11) {
+    tt <- tableGrob(head(df, top));
+    g <- g + annotation_custom(tt, xmin = -Inf, xmax = Inf, ymin = -Inf, ymax = Inf)
+    return(g);
+}
+
+
+#-------------------------------------------
+draw_nothing <- function(df){
+    ggplot(df) + facet_wrap(bridge ~ .);
+}
+
+#-------------------------------------------
+draw_bridges <- function(df=dataset, cols=c("FY", "amt", "type", "tag", "bridge"), ncol=1, edit=NULL, draw=draw_nothing) {
+    names(df) <- cols;
+    if(! is.null(edit) ) df <- edit(df);
+    grobs <- lapply(split(df, df$bridge), FUN=draw)
+    grid.arrange(grobs=grobs, ncol=ncol);
+}
+
+#-------------------------------------------
 fmt_c1 <- function(x, div=1) { format(round(x/div, 1), nsmall=1, big.mark=","); }
 
 #-------------------------------------------
