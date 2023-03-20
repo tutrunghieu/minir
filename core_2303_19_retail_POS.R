@@ -100,9 +100,26 @@ add_lines_YTD <- function(g, df, more=NULL) {
 }
 
 #-------------------------------------------
+draw_carousel_legend <- function(df=rename(dataset, "xx", "yy", "fill"), more=NULL) { 
+    if( is.null(more) ) {
+        more <- list(legend_pos="right");
+    	more$color_mapping <- list('A, top 10 customers'='yellow', 'B, other customers'='grey', 'A, top 10 stores'='yellow', 'B, other stores'='grey')
+    }
+
+    g <- ggplot(df) + geom_bar(aes(x=xx, y=0, fill=fill), stat="identity", show.legend=TRUE); 
+    g <- g + theme(axis.title.x = element_blank(), axis.ticks.x = element_blank(), axis.text.x = element_blank() );
+    g <- g + theme(axis.title.y = element_blank(), axis.ticks.y = element_blank(), axis.text.y = element_blank() );
+    g <- g + theme(legend.position=more$legend_pos) + labs(fill='');
+    if( !is.null(more$color_mapping) ) g <- g + scale_fill_manual(values=more$color_mapping);
+    return(g);
+}
+
+
+#-------------------------------------------
 draw_carousel_chart1 <- function(ddd, more) { 
     g <- ggplot(ddd) + geom_bar(aes(x=xx, y=yy, fill=fill), stat="identity", show.legend=more$legend); 
     g <- g + theme(axis.title.x = element_blank(), axis.title.y = element_blank(), axis.text.x = element_text(angle=more$xx_angle) );
+    g <- g + theme(legend.position="bottom") + labs(fill='');
     g <- g + scale_y_continuous(labels=more$yy_fmt);
     if( !is.null(more$color_mapping) ) g <- g + scale_fill_manual(values=more$color_mapping);
     return(g);
@@ -112,6 +129,7 @@ draw_carousel_chart1 <- function(ddd, more) {
 draw_carousel_chart2 <- function(ddd, more) {  
     g <- ggplot(ddd) + geom_bar(aes(x=xx, y=yy, fill=fill), stat="identity", position="fill", show.legend=more$legend); 
     g <- g + theme(axis.title.x = element_blank(), axis.title.y = element_blank(), axis.text.x = element_text(angle=more$xx_angle) );
+    g <- g + theme(legend.position="bottom") + labs(fill='');
 #    g <- g + scale_y_continuous(labels=more$yy_fmt);
     if( !is.null(more$color_mapping) ) g <- g + scale_fill_manual(values=more$color_mapping);
     return(g);
@@ -120,7 +138,7 @@ draw_carousel_chart2 <- function(ddd, more) {
 #-------------------------------------------
 draw_carousel_SF <- function(df=rename(dataset, "xx", "yy", "fill"), more=NULL) {
     if( is.null(more) ) {
-        more <- list(chart1=draw_carousel_chart1, chart2=draw_carousel_chart2, array_ncol=2, xx_angle=15, yy_fmt=fmt_c1_e3, legend=TRUE);
+        more <- list(chart1=draw_carousel_chart1, chart2=draw_carousel_chart2, array_ncol=2, xx_angle=15, yy_fmt=fmt_c1_e3, legend=FALSE);
 	more$color_mapping <- list('A, top 10 customers'='yellow', 'B, other customers'='grey', 'A, top 10 stores'='yellow', 'B, other stores'='grey')
     }
     
