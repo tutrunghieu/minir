@@ -22,9 +22,9 @@ fmt_c1_e9 <- function(x, div=1e9) { format(round(x/div, 1), nsmall=1, big.mark="
 
 
 #-------------------------------------------
-draw_bridge_YTD <- function(df=rename(dataset, "xx", "yy", "fill", "tag"), 
+draw_bridge_YTD <- function(df=rename(dataset, "xx", "yy", "fill", "tag"), more=NULL, 
 color_mapping=list(major='yellow', hypermarkets='red', supermarkets='green', others='cyan'), 
-box_width=0.47, more=NULL, yy_fmt=fmt_c1_e3, fmt=fmt_c1_e3, xx_angle=25, major_mult=0.5, major_angle=0, minor_angle=25, legend=TRUE) {
+box_width=0.47, yy_fmt=fmt_c1_e3, fmt=fmt_c1_e3, xx_angle=25, major_mult=0.5, major_angle=0, minor_angle=25, legend=TRUE) {
     g <- ggplot(df);
     g <- g + geom_text(aes(x=xx, y=0, label='', group=fill), stat="identity", show.legend=FALSE);
 
@@ -49,27 +49,52 @@ box_width=0.47, more=NULL, yy_fmt=fmt_c1_e3, fmt=fmt_c1_e3, xx_angle=25, major_m
     print(g);
 }
 
+#-------------------------------------------
+draw_line_array_YTD <- function(df=rename(dataset, "xx", "yy", "fill", "panel"), more=NULL) {
+    if( is.null(more) ) { 
+        more <- list(yy_fmt=fmt_c1_e3, label_fmt=fmt_c1_e3, xx_angle=0, make_col=make_color, legend=TRUE);
+        more <- c(more, array_ncol=2);
+    }
 
+    ldf <- split(df, df$panel);
+    ldf <- lapply(ldf, FUN=function(ddd) { draw_lines_YTD(ddd); });
+    grid.arrange(grobs=ldf, ncol=more$array_ncol);    
+}
 
 #-------------------------------------------
-draw_lines_YTD <- function(df=rename(dataset, "xx", "yy", "fill"), more=NULL, legend=TRUE) {
+draw_lines_YTD <- function(df=rename(dataset, "xx", "yy", "fill"), more=NULL) {
+    if( is.null(more) ) { 
+        more <- list(yy_fmt=fmt_c1_e3, label_fmt=fmt_c1_e3, xx_angle=0, make_col=make_color, legend=TRUE);
+    }
+
     df$sel <- as.character(df$xx);
     g <- ggplot(df);
-    g <- add_lines_YTD(g, df[df$sel<"YTD", ]);
-    g <- add_lines_YTD(g, df[df$sel>"YTD", ]);
+    g <- add_lines_YTD(g, df[df$sel<"YTD", ], more);
+    g <- add_lines_YTD(g, df[df$sel>"YTD", ], more);
     print(g);
 }
 
 #-------------------------------------------
-add_lines_YTD <- function(g, df, map=NULL) {
-    ldf <- split(df, df$fill);
-    
-    for(nk in names(ldf)) {
-        ddd <- ldf[[nk]];
-        ck <- make_color(nk, map);
-        g <- g + geom_line(data=ddd, aes(x=xx, y=yy, fill=fill, group=fill), color=ck, show.legend=FALSE);
-        g <- g + geom_point(data=ddd, aes(x=xx, y=yy, fill=fill, group=fill), color=ck, show.legend=FALSE);
+add_lines_YTD <- function(g, df, more=NULL) {
+    if( is.null(more) ) { 
+        more <- list(yy_fmt=fmt_c1_e3, label_fmt=fmt_c1_e3, xx_angle=0, make_col=make_color, legend=TRUE);
     }
 
+    ldf <- split(df, df$fill);
+
+    map <- list();    
+    for(nk in names(ldf)) {
+        ddd <- ldf[[nk]];
+        ck <- more$make_col(nk, more);
+        map[[nk]] <- ck;
+        g <- g + geom_rect(data=ddd, aes(xmin=xx, xmax=xx, ymin=yy, ymax=yy, fill=fill), show.legend=more$legend);
+        g <- g + geom_line(data=ddd, aes(x=xx, y=yy, fill=fill, group=fill), color=ck, show.legend=FALSE);
+        g <- g + geom_point(data=ddd, aes(x=xx, y=yy, fill=fill, group=fill), color=ck, show.legend=FALSE);
+        g <- g + geom_text(data=ddd, aes(x=xx, y=yy, label=more$label_fmt(yy), group=fill), show.legend=FALSE);
+    }
+
+    g <- g + theme(axis.title.x = element_blank(), axis.title.y = element_blank(), axis.text.x = element_text(angle=more$xx_angle) );
+    g <- g + scale_y_continuous(labels=more$yy_fmt);
+    g <- g + scale_fill_manual(values=map);
     return(g);
 }
