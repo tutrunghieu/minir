@@ -10,7 +10,12 @@ main <- function(name='figure1_line', expr=NULL) { expr(); }
 rename <- function(df, ...) { names(df) <- unlist(list(...)); return(df); }
 
 #-------------------------------------------
-make_color <- function(nk, map, pos=2) { paste0('#', substr(md5(nk), pos, pos+5) ); }
+make_color <- function(nk, map=NULL, pos=2) { paste0('#', substr(md5(nk), pos, pos+5) ); }
+
+make_color_HSO <- function(nk, map=NULL, pos=2) { 
+   map <- list(hypermarkets='#ffe600', supermarkets='#797991', others='#d2d2da');
+   return(map[[nk]]);	
+}
 
 
 #-------------------------------------------
@@ -19,11 +24,13 @@ fmt_c1_e3 <- function(x, div=1e3) { format(round(x/div, 1), nsmall=1, big.mark="
 fmt_c1_e6 <- function(x, div=1e6) { format(round(x/div, 1), nsmall=1, big.mark=","); }
 fmt_c1_e9 <- function(x, div=1e9) { format(round(x/div, 1), nsmall=1, big.mark=","); }
 
+# ffe600 797991 d2d2da 9c82d4	
+# 2db757 27acaa 188ce5 3d108a ff4136
 
 
 #-------------------------------------------
 draw_bridge_YTD <- function(df=rename(dataset, "xx", "yy", "fill", "tag"), more=NULL, 
-color_mapping=list(major='yellow', hypermarkets='pink', supermarkets='magenta', others='cyan'), 
+color_mapping=list(major='#ffe600', hypermarkets='#797991', supermarkets='#d2d2da', others='#9c82d4'), 
 box_width=0.47, yy_fmt=fmt_c1_e3, fmt=fmt_c1_e3, xx_angle=25, major_mult=0.5, major_angle=0, minor_angle=25, legend=TRUE) {
     g <- ggplot(df);
     g <- g + geom_text(aes(x=xx, y=0, label='', group=fill), stat="identity", show.legend=FALSE);
@@ -64,7 +71,7 @@ draw_line_array_YTD <- function(df=rename(dataset, "xx", "yy", "fill", "panel"),
 #-------------------------------------------
 draw_lines_YTD <- function(df=rename(dataset, "xx", "yy", "fill"), more=NULL) {
     if( is.null(more) ) { 
-        more <- list(yy_fmt=fmt_c1_e3, label_fmt=fmt_c1_e3, xx_angle=0, make_col=make_color, legend=TRUE);
+        more <- list(yy_fmt=fmt_c1_e3, label_fmt=fmt_c1_e3, xx_angle=0, make_col=make_color_HSO, legend=TRUE);
     }
 
     df$sel <- as.character(df$xx);
@@ -77,7 +84,7 @@ draw_lines_YTD <- function(df=rename(dataset, "xx", "yy", "fill"), more=NULL) {
 #-------------------------------------------
 add_lines_YTD <- function(g, df, more=NULL) {
     if( is.null(more) ) { 
-        more <- list(yy_fmt=fmt_c1_e3, label_fmt=fmt_c1_e3, xx_angle=0, make_col=make_color, legend=TRUE);
+        more <- list(yy_fmt=fmt_c1_e3, label_fmt=fmt_c1_e3, xx_angle=0, make_col=make_color_HSO, legend=TRUE);
     }
 
     ldf <- split(df, df$fill);
