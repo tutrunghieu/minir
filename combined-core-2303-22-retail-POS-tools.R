@@ -8,12 +8,12 @@ A3_side_array <- function() {
  draw_bar_array_YTD(make_chart=draw_side_chart_YTD); 
 } 
 draw_bar_array_YTD <- function(df=rename(dataset, "xx", "yy", "fill", "panel"),  
-more=NULL, make_chart=draw_bar_chart_YTD,  
-color_mapping=list(major='#ffe600', hypermarkets='#797991', supermarkets='#d2d2da', others='#9c82d4'),  
-show_totals=TRUE, show_labels=FALSE, label_fmt=fmt_c1_e3, total_fmt=fmt_c1, yy_fmt=fmt_c1_e3, xx_angle=75, xx_complete=TRUE, xx_vline=TRUE, 
-array_ncol=2, array_caption='xx', array_title='bar array', show_checksum=TRUE) { 
+make_chart=draw_bar_chart_YTD, legend=TRUE, 
+color_mapping=NULL, show_totals=TRUE, show_labels=FALSE, label_fmt=fmt_c1_e3, total_fmt=fmt_c1, yy_fmt=fmt_c1_e3, xx_angle=75, xx_complete=TRUE, xx_vline=TRUE, 
+array_ncol=2, array_caption='xx', array_title='bar array', show_checksum=TRUE, 
+more=NULL) { 
  if( is.null(more) ) {  
- more <- list(make_chart=make_chart, xx_vline=xx_vline, label_fmt=label_fmt, show_labels=show_labels, show_totals=show_totals, 
+ more <- list(legend=legend, make_chart=make_chart, xx_vline=xx_vline, label_fmt=label_fmt, show_labels=show_labels, show_totals=show_totals, 
  xx_complete=xx_complete, xx_angle=xx_angle, yy_fmt=yy_fmt, color_mapping=color_mapping); 
  more <- c(more, show_checksum=show_checksum, total_fmt=total_fmt,  
  array_title=array_title, array_ncol=array_ncol, array_caption=array_caption); 
@@ -21,7 +21,7 @@ array_ncol=2, array_caption='xx', array_title='bar array', show_checksum=TRUE) {
  more$xx_labels <- make_vocab(df$xx); 
  more$xx_cutoff <- which('LTM22'==more$xx_labels$name) + 0.5; 
  more$yy_total <- more$total_fmt( sum(df$yy) ); 
- ldf <- lapply(split(df, df$panel), FUN=function(ddd) { more$make_chart(ddd, more); }); 
+ ldf <- lapply(split(df, df$panel), FUN=function(ddd) { more$make_chart(df=ddd, more=more); }); 
   
  g <- ggplot_arrange(grobs=ldf, ncol=more$array_ncol) + theme_void(); 
   
@@ -38,7 +38,7 @@ draw_bar_chart_YTD <- function(df, more) {
  if(more$xx_complete) { g <- g + geom_text(data=more$xx_labels, aes(x=name, y=0, label=''), show.legend=FALSE); } 
  if( more$xx_vline) { g <- g + geom_vline(aes(xintercept=more$xx_cutoff), linetype="dashed", color='blue'); } 
   
- g <- g + geom_bar(aes(x=xx, y=yy, fill=fill), stat="identity", show.legend=FALSE);        
+ g <- g + geom_bar(aes(x=xx, y=yy, fill=fill), stat="identity", show.legend=more$legend);        
   
  if(more$show_totals) { 
  tdf <- annual_totals(df, thres=1e-3); 
@@ -54,7 +54,7 @@ draw_side_chart_YTD <- function(df, more) {
  if(more$xx_complete) { g <- g + geom_text(data=more$xx_labels, aes(x=name, y=0, label=''), show.legend=FALSE); } 
  if( more$xx_vline) { g <- g + geom_vline(aes(xintercept=more$xx_cutoff), linetype="dashed", color='blue'); } 
   
- g <- g + geom_bar(aes(x=xx, y=yy, fill=fill), stat="identity", position=position_dodge(), show.legend=FALSE);         
+ g <- g + geom_bar(aes(x=xx, y=yy, fill=fill), stat="identity", position=position_dodge(), show.legend=more$legend);         
  if(more$show_labels) g <- g + geom_text(aes(x=xx, y=yy, label=more$label_fmt(yy), group=fill), position=position_dodge(width=0.5), show.legend=FALSE)  
   
  g <- g + theme(axis.title.x = element_blank(), axis.title.y = element_blank(), axis.text.x = element_text(angle=more$xx_angle) ); 
@@ -98,8 +98,7 @@ A4_bridge_array <- function() {
  draw_bridge_array_YTD(); 
 } 
 draw_bridge_array_YTD <- function(df=rename(dataset, "xx", "yy", "fill", "tag", "panel"), more=NULL, make_chart=draw_bridge_YTD, 
-color_mapping=list(major='#ffe600', hypermarkets='#797991', supermarkets='#d2d2da', others='#9c82d4'),  
-xx_complete=TRUE, xx_vline=TRUE, box_width=0.47, yy_fmt=fmt_c1_e3, fmt=fmt_c1_e3, xx_angle=25,  
+color_mapping=NULL, xx_complete=TRUE, xx_vline=TRUE, box_width=0.47, yy_fmt=fmt_c1_e3, fmt=fmt_c1_e3, xx_angle=25,  
 major_mult=0.5, major_angle=0, minor_angle=25, legend=TRUE, show_totals=TRUE, total_fmt=fmt_c1, 
 array_ncol=1, array_caption='xx', array_title='bar array', show_checksum=TRUE) { 
  if( is.null(more) ) {  
@@ -111,7 +110,9 @@ array_ncol=1, array_caption='xx', array_title='bar array', show_checksum=TRUE) {
  more$xx_labels <- make_vocab(df$xx); 
  more$xx_cutoff <- which('YTD21'==more$xx_labels$name) - 0.5; 
  more$yy_total <- more$total_fmt( sum(df$yy) ); 
- ldf <- lapply(split(df, df$panel), FUN=function(ddd) { more$make_chart(ddd, more); }); 
+ ldf <- lapply(split(df, df$panel), FUN=function(ddd) {  
+ more$make_chart(df=ddd, more=more);  
+ }); 
   
  g <- ggplot_arrange(grobs=ldf, ncol=more$array_ncol) + theme_void(); 
   
@@ -123,16 +124,17 @@ array_ncol=1, array_caption='xx', array_title='bar array', show_checksum=TRUE) {
   
  print(g); 
 } 
-draw_bridge_YTD <- function(df=rename(dataset, "xx", "yy", "fill", "tag", "panel"), more=NULL,  
+draw_bridge_YTD <- function(df=rename(dataset, "xx", "yy", "fill", "tag", "panel"),   
 color_mapping=list(major='#ffe600', hypermarkets='#797991', supermarkets='#d2d2da', others='#9c82d4'),  
 xx_complete=TRUE, xx_vline=TRUE, box_width=0.47, yy_fmt=fmt_c1_e3, fmt=fmt_c1_e3, xx_angle=25,  
-major_mult=0.5, major_angle=0, minor_angle=25, legend=TRUE) { 
+major_mult=0.5, major_angle=0, minor_angle=25, legend=TRUE, 
+more=NULL) { 
  g <- ggplot(df); 
   
  if(more$xx_complete) { g <- g + geom_text(data=more$xx_labels, aes(x=name, y=0, label=''), show.legend=FALSE); } 
  if( more$xx_vline) { g <- g + geom_vline(aes(xintercept=more$xx_cutoff), linetype="dashed", color='blue'); } 
  df1 <- df[df$tag=="major", ];     
- g <- g + geom_bar(data=df1, aes(x=xx, y=yy, fill=fill), stat="identity", show.legend=legend); 
+ g <- g + geom_bar(data=df1, aes(x=xx, y=yy, fill=fill), stat="identity", show.legend=more$legend); 
  g <- g + geom_text(data=df1, aes(x=xx, y=yy*major_mult, label=fmt(yy) ), angle=major_angle, show.legend=FALSE); 
  s <- 0; 
  for(k in 1:nrow(df)) { if(df$tag[k] == "major") { s <- df$yy[k]; } else { df[k, "y1"] <- s; s <- s + df$yy[k]; df[k, "y2"] <- s; } } 
@@ -142,7 +144,7 @@ major_mult=0.5, major_angle=0, minor_angle=25, legend=TRUE) {
  g <- g + geom_rect(data=df1, aes(xmin=x1, xmax=x2, ymin=y1, ymax=y2, fill=fill), show.legend=legend); 
  g <- g + geom_text(data=df1, aes(x=(x1+x2)/2, y=(y1+y2)/2, label=fmt(yy) ), angle=minor_angle, show.legend=FALSE); 
  g <- g + theme(axis.title.x = element_blank(), axis.title.y = element_blank(), axis.text.x = element_text(angle=xx_angle) ); 
- g <- g + scale_fill_manual(values=color_mapping); 
+ g <- g + scale_fill_manual(values=more$color_mapping); 
  g <- g + scale_y_continuous(labels=yy_fmt); 
  print(g); 
 } 
@@ -156,6 +158,11 @@ rename <- function(df, ...) {
 } 
 make_color <- function(nk, more=NULL, pos=2) {  
  paste0('#', substr(md5(nk), pos, pos+5) );  
+} 
+make_color_dual <- function(nk, more=NULL, pos=2) {  
+ ck <- more$color_mapping[[nk]]; 
+ if( is.null(ck) ) ck <- paste0('#', substr(md5(nk), pos, pos+5) );  
+ return(ck); 
 } 
 make_color_HSO <- function(nk, map=NULL, pos=2) {  
  map <- list(hypermarkets='#ffe600', supermarkets='#797991', others='#d2d2da'); 
@@ -222,17 +229,17 @@ A6_pie_array <- function() {
  draw_pie_array(); 
 } 
 draw_pie_array <- function(df=rename(dataset, "xx", "yy", "panel"), 
-color_mapping=NULL, 
+color_mapping=NULL, yy_fmt=fmt_c1_e3, legend=TRUE, 
 array_ncol=2, array_title='pie array', array_caption='xx', show_checksum=TRUE, fmt_checksum=fmt_c1, 
 more=NULL) { 
  if( is.null(more) ) {  
- more <- list(color_mapping=color_mapping); 
+ more <- list(color_mapping=color_mapping, yy_fmt=yy_fmt, legend=legend); 
  more <- c(more, show_checksum=show_checksum, fmt_checksum=fmt_checksum,  
  array_title=array_title, array_ncol=array_ncol, array_caption=array_caption); 
  } 
   
  more$yy_total <- more$fmt_checksum( sum(df$yy) ); 
- ldf <- lapply(split(df, df$panel), FUN=function(ddd) { draw_pie_chart(ddd) + ggtitle(ddd$panel[1]); }); 
+ ldf <- lapply(split(df, df$panel), FUN=function(ddd) { draw_pie_chart(df=ddd, more=more) + ggtitle(ddd$panel[1]); }); 
  g <- ggplot_arrange(grobs=ldf, ncol=more$array_ncol) + theme_void(); 
   
  if( !is.null(more$array_title) ) g <- g + ggtitle(more$array_title); 
@@ -244,22 +251,28 @@ more=NULL) {
  print(g); 
 }     
 draw_pie_chart <- function(df=rename(dataset, "xx", "yy", "panel"),  
-color_mapping=list(major='#ffe600', hypermarkets='#797991', supermarkets='#d2d2da', others='#9c82d4'), legend=FALSE, 
+yy_fmt=fmt_c1_e3, color_mapping=NULL, legend=FALSE, 
 more=NULL) { 
- g <- ggplot(df) + geom_bar(aes(x="", y=yy, fill=xx), stat="identity", width=1, show.legend=legend) + coord_polar("y", start=0) + theme_void(); 
- g <- g + geom_text(aes(x="", y=yy, label = fmt_c1_e3(yy), fill=xx ), position = position_stack(vjust = 0.5)); 
- g <- g + scale_fill_manual(values=color_mapping); 
+ if( is.null(more) ) {  
+ more <- list(color_mapping=color_mapping, yy_fmt=yy_fmt, legend=legend); 
+ more <- c(more, show_checksum=show_checksum, fmt_checksum=fmt_checksum,  
+ array_title=array_title, array_ncol=array_ncol, array_caption=array_caption); 
+ } 
+  
+ g <- ggplot(df) + geom_bar(aes(x="", y=yy, fill=xx), stat="identity", width=1, show.legend=more$legend) + coord_polar("y", start=0) + theme_void(); 
+ g <- g + geom_text(aes(x="", y=yy, label = more$yy_fmt(yy), fill=xx ), position = position_stack(vjust = 0.5)); 
+ g <- g + scale_fill_manual(values=more$color_mapping); 
  return(g); 
 } 
 A5_line_array <- function() { 
  draw_line_array_YTD(legend=FALSE, xx_angle=25); 
 } 
 draw_line_array_YTD <- function(df=rename(dataset, "xx", "yy", "fill", "panel"),  
-yy_fmt=fmt_c1_e3, label_fmt=fmt_c1_e3, xx_angle=0, make_col=make_color_HSO, legend=TRUE, xx_complete=TRUE, xx_vline=TRUE, 
+color_mapping=NULL, yy_fmt=fmt_c1_e3, label_fmt=fmt_c1_e3, xx_angle=0, make_col=make_color_dual, legend=TRUE, xx_complete=TRUE, xx_vline=TRUE, 
 array_ncol=2, array_title='line array', array_caption='xx', show_checksum=TRUE, fmt_checksum=fmt_c1, 
 more=NULL) { 
  if( is.null(more) ) {  
- more <- list(yy_fmt=yy_fmt, label_fmt=label_fmt, xx_angle=xx_angle, make_col=make_col, xx_complete=xx_complete, xx_vline=xx_vline, legend=legend); 
+ more <- list(color_mapping=color_mapping, yy_fmt=yy_fmt, label_fmt=label_fmt, xx_angle=xx_angle, make_col=make_col, xx_complete=xx_complete, xx_vline=xx_vline, legend=legend); 
  more <- c(more, show_checksum=show_checksum, fmt_checksum=fmt_checksum, array_ncol=array_ncol, array_title=array_title, array_caption=array_caption); 
  } 
   
