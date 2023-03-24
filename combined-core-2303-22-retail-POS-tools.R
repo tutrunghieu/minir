@@ -149,6 +149,19 @@ more=NULL) {
  print(g); 
 } 
 library(ggplot2); library(openssl); library(gridExtra); 
+unique_vals <- function(...) { 
+ vals <- as.character(unlist(list(...))); 
+ voc <- c(); 
+ for(vk in vals) voc[vk] <- 1;  
+ voc <- names(voc); 
+  
+ return( voc[order(voc)] ); 
+} 
+factor0 <- function(vals, voc=NULL) { 
+ vals <- as.character(vals); 
+ if( is.null(voc) ) voc <- vals; 
+ factor(vals, levels=voc); 
+} 
 main <- function(name='figure1', expr=NULL) {  
  expr();  
 } 
@@ -225,45 +238,6 @@ draw_carousel_SF <- function(df=rename(dataset, "xx", "yy", "fill"), more=NULL) 
  ldf <- list(stack=more$chart1(df, more), full=more$chart2(df, more)); 
  grid.arrange(grobs=ldf, ncol=more$array_ncol); 
 } 
-A6_pie_array <- function() { 
- draw_pie_array(); 
-} 
-draw_pie_array <- function(df=rename(dataset, "xx", "yy", "panel"), 
-color_mapping=NULL, yy_fmt=fmt_c1_e3, legend=TRUE, 
-array_ncol=2, array_title='pie array', array_caption='xx', show_checksum=TRUE, fmt_checksum=fmt_c1, 
-more=NULL) { 
- if( is.null(more) ) {  
- more <- list(color_mapping=color_mapping, yy_fmt=yy_fmt, legend=legend); 
- more <- c(more, show_checksum=show_checksum, fmt_checksum=fmt_checksum,  
- array_title=array_title, array_ncol=array_ncol, array_caption=array_caption); 
- } 
-  
- more$yy_total <- more$fmt_checksum( sum(df$yy) ); 
- ldf <- lapply(split(df, df$panel), FUN=function(ddd) { draw_pie_chart(df=ddd, more=more) + ggtitle(ddd$panel[1]); }); 
- g <- ggplot_arrange(grobs=ldf, ncol=more$array_ncol) + theme_void(); 
-  
- if( !is.null(more$array_title) ) g <- g + ggtitle(more$array_title); 
-  
- tt <- paste("source:", more$array_caption); 
- if( more$show_checksum ) { tt <- paste(tt, "total:",  more$yy_total); } 
- g <- g + labs(caption=tt); 
-  
- print(g); 
-}     
-draw_pie_chart <- function(df=rename(dataset, "xx", "yy", "panel"),  
-yy_fmt=fmt_c1_e3, color_mapping=NULL, legend=FALSE, 
-more=NULL) { 
- if( is.null(more) ) {  
- more <- list(color_mapping=color_mapping, yy_fmt=yy_fmt, legend=legend); 
- more <- c(more, show_checksum=show_checksum, fmt_checksum=fmt_checksum,  
- array_title=array_title, array_ncol=array_ncol, array_caption=array_caption); 
- } 
-  
- g <- ggplot(df) + geom_bar(aes(x="", y=yy, fill=xx), stat="identity", width=1, show.legend=more$legend) + coord_polar("y", start=0) + theme_void(); 
- g <- g + geom_text(aes(x="", y=yy, label = more$yy_fmt(yy), fill=xx ), position = position_stack(vjust = 0.5)); 
- g <- g + scale_fill_manual(values=more$color_mapping); 
- return(g); 
-} 
 A5_line_array <- function() { 
  draw_line_array_YTD(legend=FALSE, xx_angle=25); 
 } 
@@ -328,4 +302,104 @@ more=NULL) {
  g <- g + scale_y_continuous(labels=more$yy_fmt); 
  g <- g + scale_fill_manual(values=map); 
  return(g); 
+} 
+A6_pie_array <- function() { 
+ draw_pie_array(); 
+} 
+draw_pie_array <- function(df=rename(dataset, "xx", "yy", "panel"), 
+color_mapping=NULL, yy_fmt=fmt_c1_e3, legend=TRUE, 
+array_ncol=2, array_title='pie array', array_caption='xx', show_checksum=TRUE, fmt_checksum=fmt_c1, 
+more=NULL) { 
+ if( is.null(more) ) {  
+ more <- list(color_mapping=color_mapping, yy_fmt=yy_fmt, legend=legend); 
+ more <- c(more, show_checksum=show_checksum, fmt_checksum=fmt_checksum,  
+ array_title=array_title, array_ncol=array_ncol, array_caption=array_caption); 
+ } 
+  
+ more$yy_total <- more$fmt_checksum( sum(df$yy) ); 
+ ldf <- lapply(split(df, df$panel), FUN=function(ddd) { draw_pie_chart(df=ddd, more=more) + ggtitle(ddd$panel[1]); }); 
+ g <- ggplot_arrange(grobs=ldf, ncol=more$array_ncol) + theme_void(); 
+  
+ if( !is.null(more$array_title) ) g <- g + ggtitle(more$array_title); 
+  
+ tt <- paste("source:", more$array_caption); 
+ if( more$show_checksum ) { tt <- paste(tt, "total:",  more$yy_total); } 
+ g <- g + labs(caption=tt); 
+  
+ print(g); 
+}     
+draw_pie_chart <- function(df=rename(dataset, "xx", "yy", "panel"),  
+yy_fmt=fmt_c1_e3, color_mapping=NULL, legend=FALSE, 
+more=NULL) { 
+ if( is.null(more) ) {  
+ more <- list(color_mapping=color_mapping, yy_fmt=yy_fmt, legend=legend); 
+ more <- c(more, show_checksum=show_checksum, fmt_checksum=fmt_checksum,  
+ array_title=array_title, array_ncol=array_ncol, array_caption=array_caption); 
+ } 
+  
+ g <- ggplot(df) + geom_bar(aes(x="", y=yy, fill=xx), stat="identity", width=1, show.legend=more$legend) + coord_polar("y", start=0) + theme_void(); 
+ g <- g + geom_text(aes(x="", y=yy, label = more$yy_fmt(yy), fill=xx ), position = position_stack(vjust = 0.5)); 
+ g <- g + scale_fill_manual(values=more$color_mapping); 
+ return(g); 
+} 
+sort_by_XXL <- function(vals) { 
+ factor(vals, levels=c("XXS", "XS", "S", "M", "L", "XL", "XXL")); 
+} 
+sort_XXL_AC <- function(vals) { 
+ factor(vals, levels=c("XXS/AC", "XXS/NAC", "XS/AC", "XS/NAC", "S/AC", "S/NAC",  
+ "M/AC", "M/NAC", "L/AC", "L/NAC", "XL/AC", "XL/NAC", "XXL/AC", "XXL/NAC")) 
+} 
+draw_boxplot_array <- function(df=rename(dataset, "xx", "yy", "fill"), xx_angle=25, legend=TRUE, sort_xx=sort_by_XXL, more=NULL) { 
+ if( is.null(more) ) {  
+ more <- list(sort_xx=sort_xx, xx_angle=xx_angle, xx_angle=xx_angle, legend=legend); 
+ } 
+  
+ df$xx <- sort_xx(df$xx); 
+ g <- ggplot(df) + geom_jitter(aes(x=xx, y=yy, color=xx), show.legend=more$legend); 
+ g <- g + geom_boxplot(aes(x=xx, y=yy), color='black', fill=NA, show.legend=more$legend); 
+ g <- g + theme(axis.title.x = element_blank(), axis.title.y = element_blank(), axis.text.x = element_text(angle=more$xx_angle) ); 
+ print(g); 
+} 
+draw_lifespan_chart <- function(df=rename(dataset, "xx", "yy", "DMI", "DMO", "fill", "panel"), 
+xx_angle=25, legend=TRUE, label_angle=25, bar_width=0.45, 
+more=NULL) { 
+ if( is.null(more) ) {  
+ more <- list(xx_angle=xx_angle, xx_angle=xx_angle, bar_width=bar_width, label_angle=label_angle, legend=legend); 
+ } 
+  
+ dates <- unique_vals(df$DMI, df$DMO); 
+ df$x1 <- as.integer( factor0(vals=df$DMI, voc=dates) ); 
+ df$x2 <- as.integer( factor0(vals=df$DMO, voc=dates) ); 
+ df$y1 <- as.integer( factor0(vals=df$xx) ) - bar_width; 
+ df$y2 <- df$y1 + 2 * bar_width;     
+ g <- ggplot(df); 
+ g <- g + geom_text(aes(x=DMI, y=xx, label=''), show.legend=FALSE); 
+ g <- g + geom_text(aes(x=DMO, y=xx, label=''), show.legend=FALSE); 
+ g <- g + geom_rect(aes(xmin=x1, xmax=x2, ymin=y1, ymax=y2, fill=fill), show.legend=FALSE); 
+ g <- g + geom_text(aes(x=DMI, y=xx, label=DMI), angle=more$label_angle, show.legend=FALSE); 
+ g <- g + geom_text(aes(x=DMO, y=xx, label=DMO), angle=more$label_angle, show.legend=FALSE); 
+  
+ g <- g + theme(axis.title.x = element_blank(), axis.title.y = element_blank(), axis.text.x = element_text(angle=more$xx_angle) ); 
+ print(g); 
+} 
+draw_lifespan_array <- function(df=rename(dataset, "xx", "yy", "DMI", "DMO", "fill", "panel"), 
+xx_angle=25, legend=TRUE, label_angle=25, bar_width=0.45, 
+array_ncol=2, array_title='lifespan array', array_caption='xx', show_checksum=TRUE, fmt_checksum=fmt_c1, 
+more=NULL) { 
+ if( is.null(more) ) {  
+ more <- list(xx_angle=xx_angle, xx_angle=xx_angle, bar_width=bar_width, label_angle=label_angle, legend=legend); 
+ more <- c(more, array_ncol=array_ncol, array_title=array_title, array_caption=array_caption, fmt_checksum=fmt_checksum, show_checksum=show_checksum); 
+ } 
+ more$yy_total = more$fmt_checksum( sum(df$yy) ); 
+ ldf <- lapply(split(df, df$panel), FUN=function(ddd) { draw_lifespan_chart(df=ddd, more=more) + ggtitle(ddd$panel[1]); }) 
+ g <- ggplot_arrange(grobs=ldf, ncol=more$array_ncol) + theme_void(); 
+  
+ if( !is.null(more$array_title) ) g <- g + ggtitle(more$array_title); 
+  
+ tt <- paste("source:", more$array_caption); 
+ if( more$show_checksum ) { tt <- paste(tt, "total:",  more$yy_total); } 
+ g <- g + labs(caption=tt); 
+  
+ print(g); 
+  
 } 
