@@ -149,6 +149,12 @@ more=NULL) {
     print(g); 
 } 
 library(ggplot2); library(openssl); library(gridExtra); 
+gt11 <- function(df, top=11) {  
+	grid.table( head(df, top) );  
+} 
+ggplot_more <- function(df=NULL, more=NULL) { 
+	ggplot(); 
+} 
 unique_vals <- function(...) { 
     vals <- as.character(unlist(list(...))); 
 	voc <- c(); 
@@ -370,7 +376,8 @@ more=NULL) {
     dates <- unique_vals(df$DMI, df$DMO); 
     df$x1 <- as.integer( factor0(vals=df$DMI, voc=dates) ); 
     df$x2 <- as.integer( factor0(vals=df$DMO, voc=dates) ); 
-    df$y1 <- as.integer( factor0(vals=df$xx) ) - bar_width; 
+    codes <- unique_vals(df$xx); 
+    df$y1 <- as.integer( factor0(vals=df$xx, voc=codes) ) - bar_width; 
     df$y2 <- df$y1 + 2 * bar_width;     
     g <- ggplot(df); 
     g <- g + geom_text(aes(x=DMI, y=xx, label=''), show.legend=FALSE); 
@@ -402,4 +409,20 @@ more=NULL) {
      
     print(g); 
      
+} 
+draw_legend_GANTT <- function(df=rename(dataset, "xx"), color_seed="123233", preset=list(CH1507='red', CH1508='green', CH1509='black')) { 
+    g <- ggplot(df) + theme_void() + geom_bar(aes(x=xx, y=0, fill=xx), stat="identity", show.legend=TRUE); 
+    col <- rand_colors(vals=unique_vals(df$xx), seed=color_seed, preset=preset); 
+    g <- g + scale_fill_manual(values=col, name='') + theme(legend.position="top"); 
+     
+    print(g); 
+} 
+rand_colors <- function(vals, sk=1, ek=6, seed="abcd", preset=NULL) { 
+    res <- list(); 
+    for(vk in vals) {  
+        ck <- preset[[vk]]; 
+        if( is.null(ck) ) ck <- paste0('#', substr(md5(paste(vk, seed)), sk, ek));  
+        res[[vk]] <- ck; 
+    } 
+    return(res); 
 } 
