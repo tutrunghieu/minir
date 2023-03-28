@@ -437,37 +437,3 @@ rand_colors <- function(vals, sk=1, ek=6, seed="abcd", preset=NULL) {
      
     return(res); 
 } 
-test_colors <- function(cols=c('red', 'green', 'blue', 'pink', 'black', 'yellow'), years=c("FY19", "FY20", "FY21", "FY22"),  
-seed=197, ncol=2) { 
-    set.seed(seed); 
-    df <- expand.grid(name=cols, xx=years); 
-    df$yy <- runif(nrow(df)) + runif(nrow(df)); 
-    df$name <- factor(df$name, levels=cols); 
-     
-    map <- cols; 
-    names(map) <- cols; 
-    ldf <- list(bars=draw_bars_GANTT(df, map), lines=draw_lines_GANTT(df, map),  
-    full=draw_bars_GANTT(df, map, pos="fill"), full=draw_bars_GANTT(df, map, pos="dodge") ); 
-    grid.arrange(grobs=ldf, ncol=ncol); 
-} 
-draw_bars_GANTT <- function(df, map, pos="stack") { 
-    g <- ggplot(df); 
-    g <- g + geom_bar(aes(x=xx, y=yy, fill=name), position=pos, stat="identity", show.legend=TRUE); 
-    g <- g + theme(axis.title.x = element_blank(), axis.title.y = element_blank()); 
-    g <- g + scale_fill_manual(values=map, name=''); 
-    return(g); 
-} 
-draw_lines_GANTT <- function(df, map, line_size=1, dot_size=1.5) { 
-    g <- ggplot(df); 
-    ldf <- split(df, df$name); 
-     
-    for(nk in names(ldf)) { 
-        ddd <- ldf[[nk]]; ck <- map[[nk]]; 
-        g <- g + geom_line(data=ddd, aes(x=xx, y=yy, group=name), color=ck, size=line_size, show.legend=FALSE); 
-        g <- g + geom_point(data=ddd, aes(x=xx, y=yy, group=name), color=ck, size=dot_size, show.legend=FALSE); 
-        g <- g + geom_rect(data=ddd, aes(xmin=xx, ymin=yy, xmax=xx, ymax=yy, fill=name), show.legend=TRUE); 
-    } 
-    g <- g + theme(axis.title.x = element_blank(), axis.title.y = element_blank()); 
-    g <- g + scale_fill_manual(values=map, name=''); 
-    return(g); 
-} 
