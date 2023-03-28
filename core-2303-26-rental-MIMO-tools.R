@@ -202,6 +202,7 @@ ggplot_table <- function(df, top=11, g=ggplot()) {
     g <- g + annotation_custom(gg, xmin = -Inf, xmax = Inf, ymin = -Inf, ymax = Inf); 
     return(g); 
 } 
+fmt_z <- function(x) { x } 
 fmt_100 <- function(x, s=100) { paste0(format(round(x*s, 1), nsmall=1, big.mark=","), '%'); } 
 fmt_100b <- function(x, s=100) { format(round(x*s, 1), nsmall=1, big.mark=","); } 
 fmt_c1 <- function(x, div=1) { format(round(x/div, 1), nsmall=1, big.mark=","); } 
@@ -410,7 +411,16 @@ more=NULL) {
     print(g); 
      
 } 
-draw_legend_GANTT <- function(df=rename(dataset, "xx"), color_seed="123233", preset=list(CH1507='red', CH1508='green', CH1509='black')) { 
+flip_table <- function(df=dataset, fmt_def=fmt_c1,  
+fmt_col=list(time_y=fmt_z, '__PUSH'=fmt_z, '__DOSH'=fmt_z),  
+more=NULL) { 
+    rdf <- data.frame(); 
+    fmt <- list(); 
+    for(cj in names(df)) { fj <- fmt_col[[cj]]; fmt[[cj]] <- ifelse(is.null(fj), fmt_def, fj); } 
+    for(k in 1:nrow(df)) for(cj in names(df)) { rdf[cj, k] <- fmt[[cj]]( df[k, cj] ); }             
+    grid.table(head(rdf, 11)); 
+} 
+draw_legend_GANTT <- function(df=rename(dataset, "xx"), color_seed="123'123", preset=list(CH1507='red', CH1508='green', CH1509='black')) { 
     g <- ggplot(df) + theme_void() + geom_bar(aes(x=xx, y=0, fill=xx), stat="identity", show.legend=TRUE); 
     col <- rand_colors(vals=unique_vals(df$xx), seed=color_seed, preset=preset); 
     g <- g + scale_fill_manual(values=col, name='') + theme(legend.position="top"); 
@@ -424,5 +434,32 @@ rand_colors <- function(vals, sk=1, ek=6, seed="abcd", preset=NULL) {
         if( is.null(ck) ) ck <- paste0('#', substr(md5(paste(vk, seed)), sk, ek));  
         res[[vk]] <- ck; 
     } 
+     
+    return(res); 
+} 
+flip_table <- function(df=dataset, fmt_def=fmt_c1,  
+fmt_col=list(time_y=fmt_z, '__PUSH'=fmt_z, '__DOSH'=fmt_z),  
+more=NULL) { 
+    rdf <- data.frame(); 
+    fmt <- list(); 
+    for(cj in names(df)) { fj <- fmt_col[[cj]]; fmt[[cj]] <- ifelse(is.null(fj), fmt_def, fj); } 
+    for(k in 1:nrow(df)) for(cj in names(df)) { rdf[cj, k] <- fmt[[cj]]( df[k, cj] ); }             
+    grid.table(head(rdf, 11)); 
+} 
+draw_legend_GANTT <- function(df=rename(dataset, "xx"), color_seed="123'123", preset=list(CH1507='red', CH1508='green', CH1509='black')) { 
+    g <- ggplot(df) + theme_void() + geom_bar(aes(x=xx, y=0, fill=xx), stat="identity", show.legend=TRUE); 
+    col <- rand_colors(vals=unique_vals(df$xx), seed=color_seed, preset=preset); 
+    g <- g + scale_fill_manual(values=col, name='') + theme(legend.position="top"); 
+     
+    print(g); 
+} 
+rand_colors <- function(vals, sk=1, ek=6, seed="abcd", preset=NULL) { 
+    res <- list(); 
+    for(vk in vals) {  
+        ck <- preset[[vk]]; 
+        if( is.null(ck) ) ck <- paste0('#', substr(md5(paste(vk, seed)), sk, ek));  
+        res[[vk]] <- ck; 
+    } 
+     
     return(res); 
 } 
