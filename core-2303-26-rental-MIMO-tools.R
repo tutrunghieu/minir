@@ -152,6 +152,7 @@ library(ggplot2); library(openssl); library(gridExtra);
 gt11 <- function(df, top=11) {  
 	grid.table( head(df, top) );  
 } 
+hex_to_int <- function(s, pref='0x') { strtoi(paste0(pref, s)); } 
 ggplot_more <- function(df=NULL, more=NULL) { 
 	ggplot(); 
 } 
@@ -436,6 +437,100 @@ rand_colors <- function(vals, sk=1, ek=6, seed="abcd", preset=NULL) {
     } 
      
     return(res); 
+} 
+toy_colors <- c('#FF0000', '#00FF00', '#0000FF', '#FF00FF', '#00FFFF', '#FFFF00'); 
+base_colors <- c("#2DB757", "#27ACAA", "#188CE5", "#3D108A", "#FF4136", "#FF6D00", "#FFE600",  
+"#2E2E38", "#797991", "#D2D2DA", "#95CB89", "#F04C3E"); 
+G1_colors <- c("#C882B2", "#B04791", "#922B73", "#74135C", "#5A0C41", "#41152C", "#351A1F"); 
+G2_colors <- c("#FF9A91", "#FF726A", "#F95C53", "#FF4135", "#DF352B", "#B8261F", "#791511"); 
+G3_colors <- c("#FFB46A", "#FF972F", "#FF8117", "#FF6D15", "#F86915", "#EB4F13", "#BB2D0F"); 
+G4_colors <- c("#8BE8AC", "#56E087", "#33C668", "#2BB755", "#1C9D3C", "#1A8635", "#15642A"); 
+G5_colors <- c("#91F0E7", "#5FE7E0", "#43C8C2", "#25ACAA", "#199090", "#157575", "#064F4E"); 
+G6_colors <- c("#86D2F2", "#4EBDEB", "#35A4E8", "#1C8CE4", "#1D77CF", "#1A5BB4", "#092B63"); 
+G7_colors <- c("#9C82D4", "#704AC3", "#532BA4", "#3C1788", "#221175", "#09095A", "#15153C"); 
+draw_legend_77 <- function(mode="") { 
+    ldf <- list(); 
+    ldf$set1 <- draw_floating_legend(df=data.frame(name=G1_colors), make=lapply_11, ncol=NULL, mode="g"); 
+    ldf$set2 <- draw_floating_legend(df=data.frame(name=G2_colors), make=lapply_11, ncol=NULL, mode="g"); 
+    ldf$set3 <- draw_floating_legend(df=data.frame(name=G3_colors), make=lapply_11, ncol=NULL, mode="g"); 
+    ldf$set4 <- draw_floating_legend(df=data.frame(name=G4_colors), make=lapply_11, ncol=NULL, mode="g"); 
+    ldf$set5 <- draw_floating_legend(df=data.frame(name=G5_colors), make=lapply_11, ncol=NULL, mode="g"); 
+    ldf$set6 <- draw_floating_legend(df=data.frame(name=G6_colors), make=lapply_11, ncol=NULL, mode="g"); 
+    ldf$set7 <- draw_floating_legend(df=data.frame(name=G7_colors), make=lapply_11, ncol=NULL, mode="g"); 
+    if(mode == "g") return( arrangeGrob(grobs=ldf, ncol=1) ); 
+    grid.arrange(grobs=ldf, ncol=1); 
+}     
+make_rainbow_colors <- function(n=9) { 
+    cols <- rainbow(n); 
+    return(lapply_11(cols)); 
+} 
+lapply_11 <- function(vals, sk=1, ek=6, seed="123'123", preset=NULL) { 
+	vals <- as.character(vals); 
+	names(vals) <- vals; 
+	return(vals); 
+} 
+lapply_1x <- function(vals, preset=toy_colors) { 
+	vals <- as.character(vals); 
+	 
+	ldf <- list();	k <- 0; nn <- length(preset); 
+	for(vk in vals) { ldf[[vk]] <- preset[[k+1]]; k <- (k + 1) %% nn; }  
+		 
+	return(ldf); 
+} 
+lapply_md516 <- function(vals, sk=1, ek=6, seed="123'123", preset=NULL) { 
+    ldf <- list(); 
+    for(nk in vals) { 
+    	ck <- preset[[nk]]; 
+	    if( is.null(ck) ) ck <- paste0('#', substr(md5(paste(nk, seed)), sk, ek)); 
+        ldf[[nk]] <- ck; 
+    }; 
+    return(ldf); 
+} 
+draw_floating_legend <- function(df=rename(dataset, "name"), make=lapply_md516, preset=NULL, mode="", ncol=5) {     
+	if( is.data.frame(df) ) { vals <- as.character(df$name); } else { vals <- as.character(df); } 
+    color_mapping <- make(vals=vals, preset=preset); 
+    ldf <- list(); 
+    for(nk in names(color_mapping) ) { 
+        ck <- color_mapping[[nk]]; 
+        ldf[[ck]] <- ggplot() + theme_void() + ggtitle(nk) +  
+            geom_rect(aes(xmin=0, ymin=0, xmax=1, ymax=1), fill=ck, show.legend=FALSE); 
+    } 
+     
+    if( is.null(ncol) ) ncol <- length(ldf); 
+     
+    if(mode == "g") return( arrangeGrob(grobs=ldf, ncol=ncol) ); 
+    grid.arrange(grobs=ldf, ncol=ncol); 
+} 
+draw_color_matrix <- function(cols=toy_colors, make=make_tones, mul=NULL) { 
+	if( is.null(mul) ) {  
+		ff <- function(x) { draw_color_scale(make(x)); }  
+	} else {  
+		ff <- function(x) { draw_color_scale(make_tones(col=x, mul=mul)); } 
+	} 
+	 
+	ldf <- lapply(cols, FUN=ff); 
+    grid.arrange(grobs=ldf, ncol=1); 
+} 
+draw_color_scale <- function(cols) {  
+     
+    ldf <- lapply(cols, FUN=function(x) {  
+        g <- ggplot() + theme_void() + ggtitle(x) + geom_rect(aes(xmin=0, ymin=0, xmax=1, ymax=1), fill=x, show.legend=FALSE);  
+    }); 
+    return(arrangeGrob(grobs=ldf, ncol=length(ldf)) ); 
+} 
+make_tones <- function(col='#FF0000', mul=c(1, 0.75, 0.5, 0.25), show=FALSE, mode="") { 
+    r1 <- hex_to_int(substr(col, 2, 3)); 
+    g1 <- hex_to_int(substr(col, 4, 5)); 
+    b1 <- hex_to_int(substr(col, 6, 7)); 
+    df <- data.frame(); 
+    for(k in seq_along(mul)) { 
+        mk <- mul[[k]]; 
+        df[k, "col"] <- sprintf("#%02X%02X%02X", as.integer(r1 * mk), as.integer(g1 * mk), as.integer(b1 * mk) ); 
+        df[k, "mul"] <- mk; 
+    } 
+    if(show) grid.table(df); 
+    if(mode == "df") return(df); 
+    return(df$col); 
 } 
 test_colors <- function(cols=c('red', 'green', 'blue', 'pink', 'black', 'yellow'), years=c("FY19", "FY20", "FY21", "FY22"),  
 seed=197, ncol=2) { 
