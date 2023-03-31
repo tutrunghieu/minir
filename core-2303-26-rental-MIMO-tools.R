@@ -149,13 +149,29 @@ more=NULL) {
     print(g); 
 } 
 library(ggplot2); library(openssl); library(gridExtra); 
-gt11 <- function(df, top=11) {  
+factor_JanDec <- function(vals) { 
+	JanDec <- c("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec", "Q1", "Q2", "Q3", "Q4"); 
+	vals <- factor(vals, levels=JanDec); 
+	return(vals);  
+} 
+make_output_file <- function(name='test1.txt') { 
+    path <- file.path(Sys.getenv('USERPROFILE'), 'Desktop/out1', name); 
+    dir.create(dirname(path), recursive=TRUE, showWarnings = FALSE); 
+    return(path); 
+} 
+export_png <- function(expr, wd=PANEL_WIDTH, hg=PANEL_HEIGHT, path=NULL, dual=FALSE) { 
+    if(dual) expr(); 
+    if(is.null(path)) path <- file.path(Sys.getenv('USERPROFILE'), 'Desktop/out1.png'); 
+    dir.create(dirname(path), recursive=TRUE, showWarnings = FALSE); 
+    png(file=path, width=wd, height=hg); 
+    if( !is.null(expr) ) expr(); 
+    muted <- dev.off(); 
+    return(path);   
+} 
+gt11 <- function(df=dataset, top=11) {  
 	grid.table( head(df, top) );  
 } 
 hex_to_int <- function(s, pref='0x') { strtoi(paste0(pref, s)); } 
-ggplot_more <- function(df=NULL, more=NULL) { 
-	ggplot(); 
-} 
 unique_vals <- function(...) { 
     vals <- as.character(unlist(list(...))); 
 	voc <- c(); 
@@ -192,16 +208,6 @@ make_vocab <- function(vals, cols=c("name", "freq")) {
     df <- data.frame(table(vals)); 
     names(df) <- cols; 
     return(df); 
-} 
-ggplot_arrange <- function(grobs, ncol=2, g=ggplot()) { 
-	gg <- arrangeGrob(grobs=grobs, ncol=ncol); 
-    g <- g + annotation_custom(gg, xmin = -Inf, xmax = Inf, ymin = -Inf, ymax = Inf); 
-    return(g); 
-} 
-ggplot_table <- function(df, top=11, g=ggplot()) { 
-	gg <- tableGrob(head(df, top)); 
-    g <- g + annotation_custom(gg, xmin = -Inf, xmax = Inf, ymin = -Inf, ymax = Inf); 
-    return(g); 
 } 
 fmt_z <- function(x) { x } 
 fmt_100 <- function(x, s=100) { paste0(format(round(x*s, 1), nsmall=1, big.mark=","), '%'); } 
@@ -565,4 +571,221 @@ draw_lines_GANTT <- function(df, map, line_size=1, dot_size=1.5) {
     g <- g + theme(axis.title.x = element_blank(), axis.title.y = element_blank()); 
     g <- g + scale_fill_manual(values=map, name=''); 
     return(g); 
+} 
+geom_bar_xyfill <- function(pos="stack", legend=TRUE, more=NULL) { 
+    geom_bar(aes(x=xx, y=yy, fill=fill), stat="identity", position=pos, show.legend=legend); 
+} 
+geom_place <- function(gg, more=NULL) { 
+	annotation_custom(gg, xmin = -Inf, xmax = Inf, ymin = -Inf, ymax = Inf); 
+}  
+geom_head <- function(df, top=5, more=NULL) { 
+	annotation_custom(tableGrob(head(df, top)), xmin = -Inf, xmax = Inf, ymin = -Inf, ymax = Inf); 
+}  
+ggplot_more <- function(df=NULL, more=NULL) { 
+	ggplot(); 
+} 
+ggplot_arrange <- function(grobs, ncol=2, g=ggplot()) { 
+	gg <- arrangeGrob(grobs=grobs, ncol=ncol); 
+    g <- g + annotation_custom(gg, xmin = -Inf, xmax = Inf, ymin = -Inf, ymax = Inf); 
+    return(g); 
+} 
+ggplot_table <- function(df, top=11, g=ggplot()) { 
+	gg <- tableGrob(head(df, top)); 
+    g <- g + annotation_custom(gg, xmin = -Inf, xmax = Inf, ymin = -Inf, ymax = Inf); 
+    return(g); 
+} 
+derive_color <- function(col='red', mul=0.5) { 
+    v <- as.double(col2rgb(col)) * mul; 
+    v <- rgb(red=v[1], green=v[2], blue=v[3], max=255); 
+    return(v); 
+} 
+make_md5_color <- function(nk, seed='abc', sk=1, ek=6) {  
+	paste0('#', substr(md5(nk), sk, ek) );  
+} 
+scale_fill_grad <- function(vals, col='green', name='', pad=2, mode="") { 
+    vals <- unique_vals(vals); 
+    map <- list(); k <- 0; nj <- length(vals) + pad; 
+    for(vk in vals) { map[[vk]] <- derive_color(col, 1-k/nj); k <- k + 1; } 
+     
+    if(mode == "map") return(map); 
+    return( scale_fill_manual(values=map, name=name) ); 
+} 
+scale_fill_preset <- function(map, preset=toy_colors) { 
+	for(nk in names(preset)) { map[[nk]] <- preset[[nk]]; } 
+	return(map); 
+} 
+scale_fill_duet <- function(vals, col1='#FF0000FF', col2='#00FF00FF', mix=c(1, 0.7, 0.5), name='', mode="") { 
+    vals <- unique_vals(vals); 
+    map <- list(); k <- 0; nj <- length(mix); 
+    for(vk in vals) { map[[vk]] <- derive_color(if( (k%%2)== 0 ) col1 else col2, mix[[ (k/2)%%nj + 1 ]]); k <- k + 1; } 
+     
+    if(mode == "map") return(map); 
+    return( scale_fill_manual(values=map, name=name) ); 
+} 
+scale_fill_mod <- function(vals, cols=toy_colors, name='', mode="") { 
+    vals <- unique_vals(vals); 
+    map <- list(); k <- 0; nn <- length(cols); 
+    for(vk in vals) { map[[vk]] <- cols[[k+1]]; k <- (k + 1) %% nn; } 
+     
+    if(mode == "map") return(map); 
+    return( scale_fill_manual(values=map, name=name) ); 
+} 
+scale_fill_md5 <- function(vals, col=NULL, sk=1, ek=6, seed="123/123", name='', mode="") { 
+    vals <- unique_vals(vals); 
+    map <- list();  
+    for(vk in vals) { map[[vk]] <- paste0('#', substr(md5(paste(vk, seed)), sk, ek)); } 
+     
+    if(mode == "map") return(map); 
+    return( scale_fill_manual(values=map, name=name) ); 
+} 
+vars <- dget( file=make_output_file('project-params.R') ); 
+list_stores <- vars$list_stores; 
+PANEL_WIDTH <- vars$PANEL_WIDTH; 
+PANEL_HEIGHT <- vars$PANEL_HEIGHT; 
+draw_SBS_trends <- function() { 
+	df <- rename(dataset, "xx", "yy", "fill", "panel"); 
+	 
+	save_as <- which(df$panel[1] == list_stores); 
+	save_as = make_output_file(name = sprintf("store-%02d/page1-trends.png", save_as) ); 	 
+    array_title <- sprintf('Customer trends for %s with total %s', df$panel[1], fmt_c1(sum(df$yy)), save_as); 
+     
+    color_mapping <- scale_fill_preset(scale_fill_md5(vals=df$fill, mode="map"),  
+    	preset=list(agents='yellow') ); 
+     
+    more <- list(xx_angle=25, xx_size=14, legend=FALSE, color_mapping=color_mapping, 
+	    array_ncol=2, array_title=array_title, array_caption=vars$source1); 
+chart1 <- function(df, more=NULL) {  
+	g <- ggplot(df) + ggtitle("chart A1") + geom_bar(aes(x=xx, y=yy, fill=fill), stat="identity", show.legend=more$legend); 
+	g <- g + scale_fill_manual(values=more$color_mapping, name='');  
+	return(fmt_chart(g)); } 
+chart2 <- function(df, more=NULL) {  
+	g <- ggplot(df) + ggtitle("chart B1") + geom_bar(aes(x=xx, y=yy, fill=fill), position="fill", stat="identity", show.legend=more$legend);  
+	g <- g + scale_fill_manual(values=more$color_mapping, name='');  
+	return(fmt_chart(g)); } 
+chart3 <- function(df, more=NULL) {  
+	g <- ggplot(df) + ggtitle("chart B1") + geom_bar(aes(x=xx, y=yy, fill=fill), position="dodge", stat="identity", show.legend=more$legend); 
+	g <- g + scale_fill_manual(values=more$color_mapping, name='');  
+	return(fmt_chart(g)); } 
+     
+chart4 <- function(df, more=NULL) {  
+	g <- ggplot(df) + theme_void() + geom_bar(aes(x=xx, y=0, fill=fill), position="dodge", stat="identity", show.legend=TRUE); 
+	g <- g + scale_fill_manual(values=more$color_mapping, name='');  
+	return(g); } 
+fmt_chart <- function(g) { 
+    g <- g + theme(axis.title.x = element_blank(), axis.title.y = element_blank()) 
+    g <- g + theme(axis.text.x = element_text(angle = more$xx_angle, size=more$xx_size)); 
+    return(g); } 
+main <- function() { 
+    ldf <- list(A=chart1(df=df, more=more), B=chart2(df=df, more=more), C=chart3(df=df, more=more), D=chart4(df=df, more=more) ); 
+    g <- ggplot() + theme_void() + geom_place(arrangeGrob(grobs=ldf, ncol=more$array_ncol)); 
+    g <- g + ggtitle(more$array_title) + labs(caption=more$array_caption); 
+    print(g); } 
+	 
+	export_png(expr=main, path=save_as, dual=TRUE); 
+} 
+draw_SBS_tops <- function() { 
+	df <- rename(dataset, "xx", "yy", "fill", "panel"); 
+	 
+	save_as <- which(df$panel[1] == list_stores); 
+	save_as = make_output_file(name = sprintf("store-%02d/page3-tops.png", save_as) ); 	 
+    array_title <- sprintf('Customer tops for %s with total %s', df$panel[1], fmt_c1(sum(df$yy)), save_as); 
+     
+    more <- list(xx_angle=25, xx_size=14, legend=TRUE,  
+	    array_ncol=2, array_title=array_title, array_caption=vars$source1); 
+	 
+chart1 <- function(df, more=NULL) {  
+	g <- ggplot(df) + ggtitle("chart A1") + geom_bar(aes(x=xx, y=yy, fill=fill), stat="identity", show.legend=more$legend); 
+	g <- g + scale_fill_md5(vals=df$fill);  
+	return(fmt_chart(g)); } 
+chart2 <- function(df, more=NULL) {  
+	g <- ggplot(df) + ggtitle("chart B1") + geom_bar(aes(x=xx, y=yy, fill=fill), position="fill", stat="identity", show.legend=more$legend);  
+	g <- g + scale_fill_md5(vals=df$fill);  
+	return(fmt_chart(g)); } 
+chart3 <- function(df, more=NULL) {  
+	g <- ggplot(df) + ggtitle("chart B1") + geom_bar(aes(x=xx, y=yy, fill=fill), position="dodge", stat="identity", show.legend=more$legend); 
+	g <- g + scale_fill_md5(vals=df$fill);  
+	return(fmt_chart(g)); } 
+chart4 <- function(df, more=NULL) {  
+	g <- ggplot(df) + theme_void(); 
+	return(g); } 
+fmt_chart <- function(g) { 
+	g <- g + scale_fill_md5(vals=df$fill);  
+    g <- g + theme(axis.title.x = element_blank(), axis.title.y = element_blank()) 
+    g <- g + theme(axis.text.x = element_text(angle = more$xx_angle, size=more$xx_size)); 
+    return(g); } 
+     
+main <- function() {  
+    ldf <- list(A=chart1(df, more=more), B=chart2(df, more=more), C=chart3(df, more=more), D=chart4(df, more=more) ); 
+    g <- ggplot() + theme_void() + geom_place(arrangeGrob(grobs=ldf, ncol=more$array_ncol)); 
+    g <- g + ggtitle(more$array_title) + labs(caption=more$array_caption); 
+    print(g); }     
+	export_png(expr=main, path=save_as, dual=TRUE); 
+} 
+draw_SBS_seasons <- function() { 
+	df <- rename(dataset, "xx", "yy", "fill", "panel", "tag"); 
+	 
+	save_as <- which(df$panel[1] == list_stores); 
+	save_as = make_output_file(name = sprintf("store-%02d/page2-seasons.png", save_as) ); 	 
+    array_title <- sprintf('Customer seasons for %s with total %s', df$panel[1], fmt_c1(sum(df$yy)), save_as); 
+     
+    color_mapping <- scale_fill_grad(vals=df$fill, col='green', mode="map"); 
+     
+    more <- list(xx_angle=25, xx_size=14, legend=FALSE, color_mapping=color_mapping,  
+	    array_ncol=2, array_title=array_title, array_caption=vars$source1); 
+	 
+sea_chart1 <- function(df, more=NULL) {  
+	g <- ggplot(df) + ggtitle("chart A1") + geom_bar(aes(x=xx, y=yy, fill=fill), position="dodge", stat="identity", show.legend=more$legend); 
+	g <- g + scale_fill_manual(values=more$color_mapping, name='');  
+	return(fmt_chart(g, more)); } 
+sea_chart2 <- function(df, more=NULL) {  
+	g <- ggplot(df) + ggtitle("chart B1");  
+	g <- g + geom_rect(aes(xmin=xx, xmax=xx, ymin=yy, ymax=yy, fill=fill), show.legend=more$legend) 
+	 
+	ldf <- split(df, df$fill); 
+	for(nk in names(ldf)) { 
+		ddd <- ldf[[nk]]; 
+		ck <- more$color_mapping[[nk]]; 
+		g <- g + geom_line(data=ddd, aes(x=xx, y=yy, group=fill), color=ck, size=1.5, show.legend=FALSE) 
+		g <- g + geom_point(data=ddd, aes(x=xx, y=yy, group=fill), color=ck, size=1.7, show.legend=FALSE) 
+	}	 
+	 
+	g <- g + scale_fill_manual(values=more$color_mapping, name='');  
+	return(fmt_chart(g, more)); } 
+fmt_chart <- function(g, more) { 
+    g <- g + theme(axis.title.x = element_blank(), axis.title.y = element_blank()) 
+    g <- g + theme(axis.text.x = element_text(angle = more$xx_angle, size=more$xx_size)); 
+    return(g); } 
+		 
+main <- function() {	 
+	df$xx <- factor_JanDec(df$xx);		 
+	df_mm <- df[df$tag=="mm", ]; 
+	df_qq <- df[df$tag=="qq", ]; 
+	 
+    ldf <- list(A=sea_chart1(df_mm, more=more), B=sea_chart1(df_qq, more=more), C=sea_chart2(df_mm, more=more), D=sea_chart2(df_qq, more=more) ); 
+    ldf <- arrangeGrob(grobs=ldf, layout_matrix=rbind(c(1, 1, 2), c(3, 3, 4)) );     
+    g <- ggplot() + geom_place(ldf) + ggtitle(more$array_title) + labs(caption=more$array_caption); 
+    print(g); } 
+     
+	export_png(expr=main, path=save_as, dual=TRUE); 
+} 
+draw_frame_cust_lead <- function(df=dataset, legend=FALSE, more=NULL) { 
+	if( is.null(more) ) { 
+		more <- list(legend=legend, xx_angle=15, xx_size=8); 
+	} 
+	 
+    chart1 <- function(df, more=NULL) {  
+    	g <- ggplot(df) + ggtitle("chart A1") + geom_bar(aes(x=xx, y=yy, fill=fill), stat="identity", show.legend=more$legend); 
+    	return(fmt_chart(g)); } 
+    	 
+    chart2 <- function(df, more=NULL) {  
+    	g <- ggplot(df) + ggtitle("chart B1") + geom_bar(aes(x=xx, y=yy, fill=fill), position="fill", stat="identity", show.legend=more$legend);  
+    	return(fmt_chart(g)); } 
+    	 
+    ldf <- list(); 
+    ldf$A <- chart1(df=df[df$name=="cust seg", ], more=more);  
+    ldf$B <- chart1(df=df[df$name=="cust par", ], more=more); 
+     
+    ldf$C <- chart2(df=df[df$name=="cust seg", ], more=more);  
+    ldf$D <- chart2(df=df[df$name=="cust par", ], more=more); 
+    grid.arrange(grobs=ldf, ncol=2); 
 } 
