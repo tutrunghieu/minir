@@ -1633,3 +1633,150 @@ add_GRCT_labels <- function(df, more) {
 	 
 	return(df); 
 } 
+list_values <- function(vals, mode="r") { 
+	voc <- list(); 
+	for(vk in vals) { voc[[vk]] <- 1; } 
+	if(mode=="r") return(voc); 
+	return(factor(vals, levels=voc)); 
+} 
+draw_bridge_xyfill_short_type_displ <- function(df=rename(dataset, "xx", "yy", "fill", "xx_short", "xx_type", "xx_displ"),  
+more=NULL, edit_more=NULL) { 
+	 
+	df$xx <- factor(df$xx, levels=as.character(df$xx)); 
+	 
+	draw_bridge_xyfill_short_type(df=df, more=more, edit_more=edit_more);	 
+} 
+draw_bridge_xyfill_short_type <- function(df=rename(dataset, "xx", "yy", "fill", "xx_short", "xx_type"),  
+more=NULL, edit_more=NULL) { 
+	if( is.null(more) ) { 
+	    more <- list(xx_sep=" ", major_label="(major)", new_label="(new)", box_width=0.45, 
+    		xx_angle=15, xx_size=11, major_angle=0, minor_angle=25, major_pos=0.5, fmt_major=fmt_c1, fmt_minor=fmt_c1, 
+			debug_table = FALSE, debug_top = 25); 
+	}		 
+		 
+	if( !is.null(edit_more) ) more <- edit_more(more);  
+	df$x1 <- as.integer(factor(df$xx)) - more$box_width; 
+	df$x2 <- df$x1 + 2 * more$box_width; 
+		 
+	s <- 0; 
+	for(k in 1:nrow(df) ) { 
+		if( df$xx_type[k] == "major" ) { s <- df$yy[k]; } else { df[k, "y1"] <- s; s <- s + df$yy[k]; df[k, "y2"] <- s;  } 
+	} 
+    g <- ggplot(df); 
+    g <- g + geom_text(aes(x=xx, y=0, label="", group=fill), show.label=FALSE); 
+    df_major <- df[df$xx_type == "major", ]; 
+    g <- g + geom_bar(data=df_major, aes(x=xx, y=yy, fill=fill, group=fill), stat="identity", show.label=FALSE); 
+    g <- g + geom_text(data=df_major, aes(x=xx, y=yy*more$major_pos, label=more$fmt_major(yy), group=fill), angle=more$major_angle, show.legend=FALSE); 
+    df_minor <- df[df$xx_type == "minor", ]; 
+    g <- g + geom_rect(data=df_minor, aes(xmin=x1, xmax=x2, ymin=y1, ymax=y2, fill=fill), show.legend=TRUE); 
+    g <- g + geom_text(data=df_minor, aes(x=(x1+x2)/2, y=(y1+y2)/2, label=more$fmt_minor(yy), group=fill), angle=more$minor_angle, show.legend=FALSE);     
+    g <- g + theme(axis.text.x = element_text(angle = more$xx_angle, size=more$xx_size)); 
+	g <- g + scale_x_discrete(labels=df$xx_short); 
+    if(more$debug_table) g <- g + geom_head(df, top=more$debug_top);     
+     
+    print(g); 
+} 
+ignore_xp <- function(e) {} 
+na_to_zero <- function(v) { 
+	if( is.na(v) ) return(0); 
+	return(v); 
+} 
+draw_categorical_bridge <- function(df=rename(dataset, "xx", "yy", "fill", "new_flag") 
+, more=NULL, edit_more=NULL) { 
+    more <- list(xx_sep=" ", major_label="(major)", new_label="(new)", box_width=0.45, 
+    	xx_angle=15, xx_size=11, major_place=0.5, fmt_major=fmt_c1, 
+		debug_table = FALSE, debug_top = 25, 
+		END=NULL); 
+		 
+    more$last_year <- list(FY18='FY17', FY19='FY18', FY20='FY19', FY21='FY20', YTD22='YTD21'); 
+	df <- add_auditable_data(df, more=more); 
+	 
+    g <- ggplot(df); 
+    g <- g + geom_text(aes(x=xx, y=0, label='', group=fill), show.legend=FALSE); 
+    df_major <- df[df$type == "major", ]; 
+    g <- g + geom_bar(data=df_major, aes(x=xx, y=yy, fill=fill), stat="identity", show.legend=TRUE); 
+    g <- g + geom_text(data=df_major, aes(x=xx, y=yy*more$major_place, label=more$fmt_major(yy), group=fill), show.legend=FALSE); 
+     
+    df_minor <- df[df$type == "minor", ]; 
+    g <- g + geom_rect(data=df_minor, aes(xmin=x1, xmax=x2, ymin=y1, ymax=y2, fill=fill), show.legend=TRUE); 
+    g <- g + geom_text(data=df_minor, aes(x=(x1+x2)/2, y=(y1+y2)/2, label=fmt_c1(yy_diff), group=fill), show.legend=FALSE);     
+    g <- g + theme(axis.text.x = element_text(angle = more$xx_angle, size=more$xx_size)); 
+	g <- g + scale_x_discrete(labels=df$xx_short); 
+	     
+    if(more$debug_table) g <- g + geom_head(df, top=more$debug_top);     
+    print(g); 
+} 
+add_auditable_data <- function(df, more=NULL) { 
+    rdf <- rectify_data(df, more=more); 
+    df_new <- compute_new(df=df[df$new_flag == 1, ], more=more); 
+    for(k in 1:nrow(df_new)) { 
+        tk <- paste(df_new$name_tar[k], more$new_label, sep=more$xx_sep); 
+        tryCatch({ rdf[tk, "yy_new"] <- df_new[k, "val"]; }, error=ignore_xp, warning=ignore_xp);     
+    } 
+    df_old <- compute_old(df=df[df$new_flag != 1, ], more=more, mode="ldf"); 
+     
+    rdf_rows <- row.names(rdf); 
+    for(ddd in df_old) { 
+        tk <- paste(ddd$row, ddd$col, sep=more$xx_sep);         
+        tryCatch({ rdf[tk, "yy_this"] <- ddd$val; }, error=ignore_xp, warning=ignore_xp);     
+         
+        tk <- paste(more$last_year[[ddd$row]], ddd$col, sep=more$xx_sep);         
+        if(tk %in% rdf_rows) tryCatch({ rdf[tk, "yy_next"] <- ddd$val; }, error=ignore_xp, warning=ignore_xp);     
+    } 
+     
+    for(k in 1:nrow(rdf)) { 
+    	if(rdf$fill[k] == more$new_label) { rdf[k, "yy_diff"] <- rdf$yy_new[k]; } 
+    	else { rdf[k, "yy_diff"] <- rdf$yy_next[k] - na_to_zero(rdf$yy_this[k]); } 
+    } 
+     
+    df <- rdf[rdf$xx_del != "del", ];     
+     
+	df$x1 <- as.integer(factor(df$xx)) - more$box_width; 
+	df$x2 <- df$x1 + 2 * more$box_width; 
+		 
+	s <- 0; 
+	for(k in 1:nrow(df) ) { 
+		if( df$type[k] == "major" ) { s <- df$yy[k]; } else { df[k, "y1"] <- s; s <- s + df$yy_diff[k]; df[k, "y2"] <- s;  } 
+	} 
+     
+	return(df); 
+} 
+compute_old <- function(df, more=NULL, mode="") { 
+    df$xx_fill <- paste(df$xx, df$fill, sep=more$xx_sep); 
+    tdf <- lapply(split(df, df$xx_fill), FUN=function(ddd) { rk <- ddd$xx[1]; ck <- ddd$fill[1]; vk <- sum(ddd$yy);  
+        return( data.frame(row=rk, col=ck, val=vk) ); }); 
+    if(mode=="ldf") return(tdf); 
+    rdf <- data.frame(); 
+    for(ddd in tdf) {  rdf[ddd$row, ddd$col] <- ddd$val; } 
+    return(rdf); 
+} 
+rectify_data <- function(df, more=NULL) { 
+	tdf_major <- lapply(split(df, df$xx), FUN=function(ddd) { sum(ddd$yy) }) 
+	tdf_minor <- lapply(split(df, df$fill), FUN=function(ddd) { 0 }) 
+    tdf_minor[[ more$new_label ]] <- 0; 
+		 
+   	rdf <- data.frame(); 
+	for(nk in names(tdf_major)) { 
+		rdf[nk, "xx"] <- nk; rdf[nk, "xx_short"] <- nk; rdf[nk, "xx_del"] <- "";  
+        rdf[nk, "yy"] <- tdf_major[[nk]]; rdf[nk, "fill"] <- more$major_label; rdf[nk, "type"] <- "major";  
+		 
+		for(nj in names(tdf_minor)) { 
+			njk <- paste(nk, nj, sep=more$xx_sep); 
+    		rdf[njk, "xx"] <- njk; rdf[njk, "xx_short"] <- nj; rdf[njk, "xx_del"] <- remove_items(nk, nj); 
+			rdf[njk, "yy"] <- NA; rdf[njk, "fill"] <- nj; rdf[njk, "type"] <- "minor";  
+			 
+		}		 
+	} 
+    sel <- order(row.names(rdf)); 
+    return(rdf[sel, ]); 
+} 
+remove_items <- function(nk, nj) { 
+	if(nk=="FY21" | nk=="YTD22") return('del'); 
+	return(''); 
+} 
+compute_new <- function(df, more=NULL) { 
+    tdf <- lapply(split(df, df$xx), FUN=function(ddd) { sum(ddd$yy); }); 
+    rdf <- data.frame(); 
+    for(nk in names(tdf)) { ly <- more$last_year[[nk]]; if(is.null(ly)) next; rdf[nk, "name_raw"] <- nk;  rdf[nk, "name_tar"] <- ly; rdf[nk, "val"] <- tdf[[nk]]; } 
+    return(rdf); 
+} 
