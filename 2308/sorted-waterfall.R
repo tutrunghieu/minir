@@ -34,10 +34,10 @@ waterfall_data <- function(df, size=0.45, lab="major") {
 }
 
 ## bar/box rendering
-waterfall_chart <- function(df, pos='bottom') {
+waterfall_chart <- function(df, pos='bottom', legend=TRUE) {
     g <- ggplot(df) + geom_text(aes(x=xx, y=0, label=''), show.legend=FALSE);
     
-    g <- g + geom_rect(aes(xmin=x1, xmax=x2, ymin=y1, ymax=y2, fill=fill), show.legend=TRUE);
+    g <- g + geom_rect(aes(xmin=x1, xmax=x2, ymin=y1, ymax=y2, fill=fill), show.legend=legend);
     g <- g + geom_text(aes(x=(x1+x2)/2, y=(y1+y2)/2, label=fmt_c1(yy), group=fill), show.legend=FALSE);
 
     g <- g + scale_fill_manual(values=colors, name='') + no_axis_titles() + scale_cy_c1_e3() + scale_x_discrete(labels=df$xx_mixed);
