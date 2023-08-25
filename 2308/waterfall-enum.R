@@ -1,5 +1,11 @@
 
 #-------------------------------------
+CRAN_US <- 'http://cran.us.r-project.org'; req <- c("ggplot2", "gridExtra"); ipack <- rownames( installed.packages() ); 
+for(pk in req) { if( !(pk %in% ipack) ) install.packages(pk, repos=CRAN_US); }
+library(ggplot2); library(gridExtra);
+
+
+#-------------------------------------
 ENUM_PAD <- ggplot;
 ENUM_NCOL <- 1;
 TDS_hf <- 582;
