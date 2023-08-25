@@ -73,6 +73,13 @@ lapply_tile <- function(df, FUN) { lapply(split(df, df$tile), FUN=FUN); }
 facet_tile <- function(ncol=1) { facet_wrap(ncol=1, tile ~ .); }
 
 #-------------------------------------
+lapply_tile_ncol <- function(df, ncol=2, show=TRUE, ret=FALSE, FUN) { 
+	ldx <- lapply(split(df, df$tile), FUN=FUN); 
+	if(show) grid.arrange(grobs=ldx, ncol=ncol); 
+	if(ret) return(ldx);
+}
+
+#-------------------------------------
 no_cx_expansion <- function() {  scale_x_continuous(expand=c(0, 0)) }
 no_cy_expansion <- function() {  scale_y_continuous(expand=c(0, 0)) }
 no_dx_expansion <- function() {  scale_x_discrete(expand=c(0, 0)) }
