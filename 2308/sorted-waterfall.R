@@ -58,7 +58,7 @@ waterfall_chart <- function(df, pos='bottom', legend=TRUE) {
 }
 
 #-------------------------------------
-main <- function() {
+waterfall_main <- main <- function() {
   df <- rename(dataset, "xx", "yy", "fill", "sort");
   df <- waterfall_data(df);
   waterfall_chart(df);
