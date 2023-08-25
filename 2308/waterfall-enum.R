@@ -73,10 +73,11 @@ lapply_tile <- function(df, FUN) { lapply(split(df, df$tile), FUN=FUN); }
 facet_tile <- function(ncol=1) { facet_wrap(ncol=1, tile ~ .); }
 
 #-------------------------------------
-lapply_tile_ncol <- function(df, ncol=2, show=TRUE, ret=FALSE, FUN) { 
+lapply_tile_ncol <- function(df, ncol=2, show=TRUE, ret="", FUN) { 
 	ldx <- lapply(split(df, df$tile), FUN=FUN); 
 	if(show) grid.arrange(grobs=ldx, ncol=ncol); 
-	if(ret) return(ldx);
+	if(ret=="list") return(ldx);
+	if(ret=="grob") return( arrangeGrob(grobs=ldx, ncol=ncol) );
 }
 
 #-------------------------------------
