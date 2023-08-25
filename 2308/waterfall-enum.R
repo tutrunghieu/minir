@@ -72,6 +72,10 @@ pad_grobs <- function(grobs, slots=4, pad=ENUM_PAD) {
 	return(grobs);
 }
 
+
+#-------------------------------------
+ggplot_void <- function() { ggplot() + theme_void(); }
+
 #-------------------------------------
 ggplot_ncol <- function(grobs, ncol=ENUM_NCOL) {
 	g <- ggplot() + theme_void() + no_cx_expansion() + no_cy_expansion();
