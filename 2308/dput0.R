@@ -1,7 +1,7 @@
 
 
 #-------------------------------------
-dput0 <- function() {
+dput0 <- function(name="project-settings.R") {
 
     vars <- list();
     
@@ -22,9 +22,10 @@ dput0 <- function() {
         source_md5('https://raw.githubusercontent.com/tutrunghieu/minir/main/2308/waterfall-enum.R');
     }
 
-    dput(vars, file=file.path(Sys.getenv("USERPROFILE"), '.out', "project-settings.R"));
+    dput(vars, file=file.path(Sys.getenv("USERPROFILE"), '.out', name));
 }
 
 #-------------------------------------
-dput0();
-library(ggplot2); print(ggplot() + ggtitle("Saved!!!") );
+done <- function() {
+	library(ggplot2); print(ggplot() + ggtitle("Saved!!!") );
+}
