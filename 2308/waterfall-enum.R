@@ -13,6 +13,18 @@ TDS_wf <- 998;
 
 
 #-------------------------------------
+rename <- function(df, ...) { names(df) <- unlist(list(...)); return(df); }
+
+#-------------------------------------
+no_axis_titles <- function() { theme(axis.title.x = element_blank(), axis.title.y = element_blank() ); }
+
+#-------------------------------------
+fmt_c1 <- function(x, div=1) { format(round(x/div, 1), nsmall=1, big.mark=","); }
+fmt_c1_e3 <- function(x, div=1e3) { format(round(x/div, 1), nsmall=1, big.mark=","); }
+scale_cy_c1_e3 <- function() { scale_y_continuous(labels=fmt_c1_e3); }
+
+
+#-------------------------------------
 print_frames <- function(grobs, path) {
 	if( is.null(names(ldx)) ) names(ldx) <- paste("frame", seq_along(ldx));
     res <- list();

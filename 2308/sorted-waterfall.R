@@ -7,12 +7,6 @@ CRAN_US <- 'http://cran.us.r-project.org'; req <- c("ggplot2", "gridExtra"); ipa
 for(pk in req) { if( !(pk %in% ipack) ) install.packages(pk, repos=CRAN_US); }
 library(ggplot2); library(gridExtra);
 
-## helping functions
-rename <- function(df, ...) { names(df) <- unlist(list(...)); return(df); }
-no_axis_titles <- function() { theme(axis.title.x = element_blank(), axis.title.y = element_blank() ); }
-fmt_c1 <- function(x, div=1) { format(round(x/div, 1), nsmall=1, big.mark=","); }
-fmt_c1_e3 <- function(x, div=1e3) { format(round(x/div, 1), nsmall=1, big.mark=","); }
-scale_cy_c1_e3 <- function() { scale_y_continuous(labels=fmt_c1_e3); }
 
 ## data formatting
 waterfall_data <- function(df, size=0.45, lab="major") {
