@@ -8,7 +8,25 @@ for(pk in req) { if( !(pk %in% ipack) ) install.packages(pk, repos=CRAN_US); }
 library(ggplot2); library(gridExtra);
 
 
-## data formatting
+#-------------------------------------
+rename <- function(df, ...) { names(df) <- unlist(list(...)); return(df); }
+
+#-------------------------------------
+no_axis_titles <- function() { theme(axis.title.x = element_blank(), axis.title.y = element_blank() ); }
+
+#-------------------------------------
+no_left_text <- function() { theme( axis.text.y = element_blank(), axis.ticks.y = element_blank(), axis.title.y = element_blank()); }
+
+#-------------------------------------
+no_base_text <- function() { theme( axis.text.x = element_blank(), axis.ticks.x = element_blank(), axis.title.x = element_blank()); }
+
+#-------------------------------------
+fmt_c1 <- function(x, div=1) { format(round(x/div, 1), nsmall=1, big.mark=","); }
+fmt_c1_e3 <- function(x, div=1e3) { format(round(x/div, 1), nsmall=1, big.mark=","); }
+scale_cy_c1_e3 <- function() { scale_y_continuous(labels=fmt_c1_e3); }
+
+
+#-------------------------------------
 waterfall_data <- function(df, size=0.45, lab="major") {
     df <- df[order(df$sort), ];
     df$xx <- factor(df$xx, levels=df$xx);
@@ -27,7 +45,7 @@ waterfall_data <- function(df, size=0.45, lab="major") {
     return(df);
 }
 
-## bar/box rendering
+#-------------------------------------
 waterfall_chart <- function(df, pos='bottom', legend=TRUE) {
     g <- ggplot(df) + geom_text(aes(x=xx, y=0, label=''), show.legend=FALSE);
     
@@ -39,6 +57,7 @@ waterfall_chart <- function(df, pos='bottom', legend=TRUE) {
     print(g);
 }
 
+#-------------------------------------
 main <- function() {
   df <- rename(dataset, "xx", "yy", "fill", "sort");
   df <- waterfall_data(df);
