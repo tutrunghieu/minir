@@ -2,7 +2,31 @@
 #-------------------------------------
 ENUM_PAD <- ggplot;
 ENUM_NCOL <- 1;
+TDS_hf <- 582;
+TDS_wf <- 998;
 
+
+#-------------------------------------
+print_frames <- function(grobs, path) {
+	if( is.null(names(ldx)) ) names(ldx) <- paste("frame", seq_along(ldx));
+    res <- list();
+	for(nk in names(ldx)) { res[[nk]] <- sprintf(path, nk); make_PNG_file(tar=res[[nk]], expr=ldx[[nk]]); }
+	return(res);
+}
+
+#-------------------------------------
+make_PNG_file <- function(wd=TDS_wf, hg=TDS_hf, tar=NULL, expr=NULL, expr1=NULL) {
+	if( is.null(expr) ) return(NULL);
+	if( is.ggplot(expr) ) { expr1 <- function() { print(expr); } } else { expr1 <- expr; }
+	
+	if( is.null(tar) ) tar <- file.path(Sys.getenv("USERPROFILE"), '.out/figure1.png');
+
+	dir.create(dirname(tar), recursive=TRUE, showWarnings = FALSE); 
+	png(file=tar, width=wd, height=hg); expr1(); muted <- dev.off();
+	LAST_PNG_FILE <<- tar;
+	
+	return(tar);	
+}
 
 #-------------------------------------
 waterfall_enum <- function(wdf, pos='bottom', lab='major', size=0.45, legend=FALSE, ncol=2) { 
