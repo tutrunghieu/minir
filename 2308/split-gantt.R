@@ -24,6 +24,8 @@ add_gantt_extras <- function(df, mid="") {
 	return(df);
 }
 
+
+
 #-------------------------------------
 geom_head <- function(df, top=7) {  
 	annotation_custom(tableGrob(head(df, top)), xmin = -Inf, xmax = Inf, ymin = -Inf, ymax = Inf); 
