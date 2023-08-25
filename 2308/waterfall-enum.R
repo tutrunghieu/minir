@@ -11,6 +11,11 @@ ENUM_NCOL <- 1;
 TDS_hf <- 582;
 TDS_wf <- 998;
 
+#-------------------------------------
+no_left_text <- function() { theme( axis.text.y = element_blank(), axis.ticks.y = element_blank(), axis.title.y = element_blank()); }
+
+#-------------------------------------
+no_base_text <- function() { theme( axis.text.x = element_blank(), axis.ticks.x = element_blank(), axis.title.x = element_blank()); }
 
 #-------------------------------------
 rename <- function(df, ...) { names(df) <- unlist(list(...)); return(df); }
