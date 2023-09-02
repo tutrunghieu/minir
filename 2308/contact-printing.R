@@ -44,7 +44,7 @@ print_frames <- function(grobs, path) {
 }
 
 #-------------------------------------
-make_PNG_file <- function(wd=TDS_wf, hg=TDS_hf, tar=NULL, expr=NULL, expr1=NULL) {
+make_PNG_file <- function(wd=TDS_wf, hg=TDS_hf, tar=NULL, expr=NULL, expr1=NULL, echo=FALSE) {
 	if( is.null(expr) ) return(NULL);
 	if( is.ggplot(expr) ) { expr1 <- function() { print(expr); } } else { expr1 <- expr; }
 	
@@ -53,6 +53,8 @@ make_PNG_file <- function(wd=TDS_wf, hg=TDS_hf, tar=NULL, expr=NULL, expr1=NULL)
 	dir.create(dirname(tar), recursive=TRUE, showWarnings = FALSE); 
 	png(file=tar, width=wd, height=hg); expr1(); muted <- dev.off();
 	LAST_PNG_FILE <<- tar;
+	
+	if(echo) cat("See", tar, "\n");
 	
 	return(tar);	
 }
