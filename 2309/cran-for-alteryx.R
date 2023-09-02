@@ -1,14 +1,17 @@
 
+#------------------------------ alteryx libraries
+ACTIVE_PATH <- file.path(Sys.getenv('USERPROFILE'), "R401"); 
+dir.create(ACTIVE_PATH, recursive = TRUE, showWarnings = FALSE);
+.libPaths( ACTIVE_PATH );
+
+#------------------------------ alteryx parameters
 df1 <- read.Alteryx("#1", mode="data.frame");
 df2 <- read.Alteryx("#2", mode="data.frame");
 CRAN_MASTER <- as.character(df2$cran_master[1]);
 CRAN_ROOT <- dirname(CRAN_MASTER);
 
 
-ACTIVE_PATH <- file.path(Sys.getenv('USERPROFILE'), "R401"); 
-dir.create(ACTIVE_PATH, recursive = TRUE, showWarnings = FALSE);
-.libPaths( ACTIVE_PATH );
-
+#------------------------------ exporting and running
 run_alteryx_page <- function(df1, df2, page1, vars=ls()) {
 	alteryx_params <- list(tabular=df1, textual=df2); 
 
@@ -33,6 +36,7 @@ run_alteryx_page <- function(df1, df2, page1, vars=ls()) {
 }
 
 
+#------------------------------ exporting and running
 tdf <- data.frame(name="master", val=Sys.getenv("CRAN_MASTER") );
 write.Alteryx(tdf, 1);
 
