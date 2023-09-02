@@ -7,14 +7,14 @@ dir.create(ACTIVE_PATH, recursive = TRUE, showWarnings = FALSE);
 #------------------------------ alteryx parameters
 df1 <- read.Alteryx("#1", mode="data.frame");
 df2 <- read.Alteryx("#2", mode="data.frame");
+alteryx_params <- list(tabular=df1, textual=df2, ls=ls()); 
+
 CRAN_MASTER <- as.character(df2$cran_master[1]);
 CRAN_ROOT <- dirname(CRAN_MASTER);
 
 
 #------------------------------ exporting and running
 run_alteryx_page <- function(df1, df2, page1, vars=ls()) {
-	alteryx_params <- list(tabular=df1, textual=df2); 
-
 	Sys.setenv(CRAN_MASTER = CRAN_MASTER);
 	Sys.setenv(CRAN_CORE = file.path(CRAN_ROOT, "cran/core.R") );
 	Sys.setenv(CRAN_ACTIVE = page1);
@@ -26,7 +26,6 @@ run_alteryx_page <- function(df1, df2, page1, vars=ls()) {
 		p <- file.path(Sys.getenv("dput_dget"), paste0(page1, "-cached-for-java.R") );
 	   
 		if( !file.exists(p) ) {
-			alteryx_params$ls <- vars; 
 			dir.create(dirname(p), recursive = TRUE, showWarnings = FALSE);
 			dput(alteryx_params, p);
 		} 
