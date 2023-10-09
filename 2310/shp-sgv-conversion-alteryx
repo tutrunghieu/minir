@@ -1,0 +1,39 @@
+##Running inside alteryx
+##Converting SHP file to SVG file
+
+#Sys.setenv(PROJECT_HOME = '%Engine.WorkflowDirectory%');
+
+Sys.setenv(PROJECT_HOME = file.path(Sys.getenv("USERPROFILE"), "Desktop") );
+Sys.setenv(TDS_WF = '800');
+Sys.setenv(TDS_HF = '600');
+
+
+#-------------------------------------
+CRAN_US <- 'http://cran.us.r-project.org';
+dir.create( Sys.getenv("R_LIBS_USER"), recursive = TRUE, showWarnings = FALSE);
+.libPaths( Sys.getenv("R_LIBS_USER") ); 
+req <- c("svglite", "ggplot2", "sf", "maps");
+ipack <- rownames( installed.packages() );
+for(pk in req) { if( !(pk %in% ipack) ) install.packages(pk, repos=CRAN_US); }
+
+#-------------------------------------
+library(svglite);
+library(ggplot2);
+library(sf);
+library(maps);
+
+#-------------------------------------
+save_SVG_format <- function(ESRI_file, tf, res=144) {
+   wd <- as.double(Sys.getenv("TDS_WF"));
+   hg <- as.double(Sys.getenv("TDS_HF"));
+   df <- st_read(ESRI_file);
+   svglite(tf, width = wd/res, height = hg/res);
+   g <- ggplot(st_geometry(df)) + geom_sf() + theme_void();
+   print(g);
+   muted <- dev.off();
+}
+
+sf <- file.path(Sys.getenv("PROJECT_HOME"), "THA-RG6.shp");
+tf <- file.path(Sys.getenv("PROJECT_HOME"), "THA-RG6.svg");
+
+save_SVG_format(sf, tf);
