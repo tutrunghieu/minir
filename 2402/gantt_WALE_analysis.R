@@ -46,13 +46,13 @@ gantt_after <- function(gdf, wd) {
 
   for(k in 1:nrow(gdf)) {
      pk <- paste("c", k);
-     sk <- gdf$first[k];
      ek <- gdf$last[k];
-     if(ek<wd) { next; }
+     if(ek<=wd) { next; }
      tdf[pk, "code"] <- gdf[k, "code"];
+     tdf[pk, "first_WL"] <- max(gdf$first[k], wd); 
+     tdf[pk, "last_WL"] <- gdf[k, "last"];    
+     tdf[pk, "sqft"] <- gdf[k, "sqft"];
      tdf[pk, "tile"] <- gdf[k, "tile"];
-     if(sk>wd) { tdf[pk, "first_WL"] <- sk; tdf[pk, "last_WL"] <- ek; }     
-     if(sk<wd) { tdf[pk, "first_WL"] <- wd; tdf[pk, "last_WL"] <- ek; }     
   }
 
   return(tdf);
@@ -66,11 +66,10 @@ gantt_chart <- function(ddd, wd=as.Date("2024-03-15"), dash_col='blue', dash_typ
 	full_col='yellow', full_size=3.5, wale_col='black', wale_size=0.5) {
       tdf <- gantt_after(ddd, wd);
 
-	ggplot(ddd) + ggtitle( WALE_title(tdf) ) + 
+	ggplot(ddd) + ggtitle( WALE_title(tdf) ) + theme(axis.title.x = element_blank(), axis.title.y = element_blank() ) +
       geom_segment(aes(x=first, xend=last, y=code, yend=code), color=full_col, size=full_size, show.legend=FALSE) +
       geom_segment(data=tdf, aes(x=first_WL, xend=last_WL, y=code, yend=code), color=wale_col, size=wale_size, show.legend=FALSE) +
-      geom_vline(aes(xintercept=wd), color=dash_col, linetype=dash_type) +
-   	theme(axis.title.x = element_blank(), axis.title.y = element_blank() );
+      geom_vline(aes(xintercept=wd), color=dash_col, linetype=dash_type);
 }
 
 gantt_array <- function(gdf, ncol=3, FUN=gantt_chart) {
