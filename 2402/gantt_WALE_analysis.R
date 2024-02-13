@@ -79,4 +79,4 @@ main <- function() {
   gantt_array(gdf);
 }
 
-main();
+#main();
