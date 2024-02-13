@@ -34,6 +34,8 @@ rlist_gantt <- function(N=123, wd="2023-02-15") {
   gdf$first <- rdate(N, wd, max=-2.5*365);
   gdf$last <- rdate(N, wd, max=3.7*365);
   gdf$tile <- fair(N);
+  gdf$monthly <- runif(N, min=700, max=1500);
+  gdf$sqft <- floor(gdf$monthly / runif(N, min=8.5, max=9.3)); 
   gdf$pad <- gdf$first - min(gdf$first);
   gdf$len <- gdf$last - gdf$first;
   return(gdf); 
