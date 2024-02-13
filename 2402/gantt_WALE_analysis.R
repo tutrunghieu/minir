@@ -1,5 +1,8 @@
 
-#rm(list=ls());
+INSIDE_PBI <- exists("powerbi_rPngDeviceType");
+if(!INSIDE_PBI) { rm(list=ls()); INSIDE_PBI <- FALSE; }
+
+
 library(ggplot2);
 library(gridExtra);
 
@@ -53,14 +56,15 @@ gantt_after <- function(gdf, wd) {
   return(tdf);
 }
 
-WALE_score <- function(tdf) {
+WALE_title <- function(tdf) {
    sprintf("%s: WALE = %0.1f months", max(tdf$tile), mean(ddm(tdf$last_WL, tdf$first_WL)) );
 }
 
 gantt_chart <- function(ddd, wd=as.Date("2024-03-15"), dash_col='blue', dash_type="dashed", 
 	full_col='yellow', full_size=3.5, wale_col='black', wale_size=0.5) {
       tdf <- gantt_after(ddd, wd);
-	ggplot(ddd) + ggtitle( WALE_score(tdf) ) + 
+
+	ggplot(ddd) + ggtitle( WALE_title(tdf) ) + 
       geom_segment(aes(x=first, xend=last, y=code, yend=code), color=full_col, size=full_size, show.legend=FALSE) +
       geom_segment(data=tdf, aes(x=first_WL, xend=last_WL, y=code, yend=code), color=wale_col, size=wale_size, show.legend=FALSE) +
       geom_vline(aes(xintercept=wd), color=dash_col, linetype=dash_type) +
@@ -79,4 +83,4 @@ main <- function() {
   gantt_array(gdf);
 }
 
-#main();
+if(!INSIDE_PBI) main();
